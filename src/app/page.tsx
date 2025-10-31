@@ -65,7 +65,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-4">weGig Setlist App</h1>
-          <p className="text-gray-400 mb-8">Manage your band's songs, setlists, and more</p>
+          <p className="text-gray-400 mb-8">Manage your band&apos;s songs, setlists, and more</p>
           <button
             onClick={() => signIn('google')}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded transition"
