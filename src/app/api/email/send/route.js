@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sendEmailViaBrevo } from '@/lib/email'
 
-export async function POST(request: Request) {
+export async function POST(request) {
   const session = await getServerSession(authOptions)
 
   if (!session?.user?.email) {

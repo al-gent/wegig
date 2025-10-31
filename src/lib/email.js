@@ -6,13 +6,7 @@ if (!brevoApiKey) {
   console.warn('BREVO_API_KEY is not set. Email functionality will be disabled.')
 }
 
-export async function sendEmailViaBrevo(options: {
-  to: string | string[]
-  subject: string
-  html?: string
-  text?: string
-  from?: { email: string; name?: string }
-}) {
+export async function sendEmailViaBrevo(options) {
   if (!brevoApiKey) {
     throw new Error('BREVO_API_KEY is not configured')
   }
