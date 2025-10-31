@@ -8,12 +8,12 @@ import Link from 'next/link'
 export default function Home() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [songs, setSongs] = useState([])
-  const [setlists, setSetlists] = useState([])
-  const [bands, setBands] = useState([])
+  const [songs, setSongs] = useState<any[]>([])
+  const [setlists, setSetlists] = useState<any[]>([])
+  const [bands, setBands] = useState<any[]>([])
   const [selectedBand, setSelectedBand] = useState('')
   const [loading, setLoading] = useState(true)
-  const hoverTimerRef = useRef(null)
+  const hoverTimerRef = useRef<any>(null)
 
   useEffect(() => {
     // Only redirect if we're definitely unauthenticated
