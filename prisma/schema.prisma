@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String          @id @default(cuid())
+  googleId          String          @unique
+  email             String          @unique
+  name              String?
+  profilePictureUrl String?
+  accessToken       String?
+  refreshToken      String?
+  createdAt         DateTime        @default(now())
+  
+  bandMembers       BandMember[]
+  charts            Chart[]
+  recordings        Recording[]
+  practiceRatings   PracticeRating[]
+}
+
+model Band {
+  id        String       @id @default(cuid())
+  name      String
+  createdAt DateTime     @default(now())
+  
+  members   BandMember[]
+  songs     Song[]
+  setlists  Setlist[]
+}
+
+model BandMember {
+  id       String   @id @default(cuid())
+  bandId   String
+  userId   String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+  
+  band Band @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([bandId, userId])
+}
+
+model Song {
+  id        String   @id @default(cuid())
+  bandId    String
+  title     String
+  artist    String?
+  comments  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  band            Band             @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  charts          Chart[]
+  recordings      Recording[]
+  practiceRatings PracticeRating[]
+  setlistSongs    SetlistSong[]
+}
+
+model Setlist {
+  id        String   @id @default(cuid())
+  bandId    String
+  name      String
+  date      DateTime?
+  venue     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  
+  band  Band          @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  songs SetlistSong[]
+}
+
+model SetlistSong {
+  id         String @id @default(cuid())
+  setlistId  String
+  songId     String
+  songOrder  Int
+  
+  setlist Setlist @relation(fields: [setlistId], references: [id], onDelete: Cascade)
+  song    Song    @relation(fields: [songId], references: [id], onDelete: Cascade)
+  
+  @@unique([setlistId, songId])
+}
+
+model Chart {
+  id               String   @id @default(cuid())
+  songId           String
+  uploadedByUserId String
+  name             String
+  driveUrl         String
+  createdAt        DateTime @default(now())
+  
+  song       Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedByUserId], references: [id])
+}
+
+model Recording {
+  id               String   @id @default(cuid())
+  songId           String
+  uploadedByUserId String
+  name             String
+  driveUrl         String
+  recordedAt       DateTime
+  createdAt        DateTime @default(now())
+  
+  song       Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedByUserId], references: [id])
+}
+
+model PracticeRating {
+  id        String   @id @default(cuid())
+  songId    String
+  userId    String
+  rating    Int
+  updatedAt DateTime @updatedAt
+  
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+  
+  @@unique([songId, userId])
+}

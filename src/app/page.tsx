@@ -1,103 +1,279 @@
-import Image from "next/image";
+'use client'
+
+import { signIn, useSession } from 'next-auth/react'
+import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [songs, setSongs] = useState([])
+  const [setlists, setSetlists] = useState([])
+  const [bands, setBands] = useState([])
+  const [selectedBand, setSelectedBand] = useState('')
+  const [loading, setLoading] = useState(true)
+  const hoverTimerRef = useRef(null)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    // Only redirect if we're definitely unauthenticated
+    if (status === 'unauthenticated') {
+      return
+    }
+    
+    // Fetch data immediately - API will handle auth
+    Promise.all([
+      fetch('/api/songs').then(res => res.json()),
+      fetch('/api/setlists').then(res => res.json()),
+      fetch('/api/bands').then(res => res.json())
+    ]).then(([songsData, setlistsData, bandsData]) => {
+      if (Array.isArray(songsData)) {
+        setSongs(songsData)
+      }
+      if (Array.isArray(setlistsData)) {
+        setSetlists(setlistsData)
+      }
+      if (Array.isArray(bandsData)) {
+        setBands(bandsData)
+      }
+      setLoading(false)
+    }).catch(error => {
+      console.error('Error fetching data:', error)
+      setLoading(false)
+    })
+  }, [status])
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearInterval(hoverTimerRef.current)
+      }
+    }
+  }, [])
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <p className="text-white">Loading...</p>
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white mb-4">weGig Setlist App</h1>
+          <p className="text-gray-400 mb-8">Manage your band's songs, setlists, and more</p>
+          <button
+            onClick={() => signIn('google')}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            Sign in with Google
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    )
+  }
+
+  const filteredSongs = selectedBand ? songs.filter(song => song.bandId === selectedBand) : songs
+  const filteredSetlists = selectedBand ? setlists.filter(setlist => setlist.band?.id === selectedBand) : setlists
+
+  const handleHoverStart = () => {
+    const sendEmail = async () => {
+      try {
+        const timestamp = new Date().toISOString()
+        await fetch('/api/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: session?.user?.email,
+            subject: `HOVER DETECTED - ${timestamp}`,
+            text: 'HOVER DETECTED - your team at weGig'
+          })
+        })
+      } catch (error) {
+        console.error('Error sending hover email:', error)
+      }
+    }
+    
+    // Send immediately, then every second
+    sendEmail()
+    hoverTimerRef.current = setInterval(sendEmail, 1000)
+  }
+
+  const handleHoverEnd = () => {
+    if (hoverTimerRef.current) {
+      clearInterval(hoverTimerRef.current)
+      hoverTimerRef.current = null
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* User Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {session?.user?.image && (
+              <img 
+                src={session.user.image} 
+                alt={session.user.name || 'User'} 
+                className="w-12 h-12 rounded-full cursor-pointer"
+                onMouseEnter={handleHoverStart}
+                onMouseLeave={handleHoverEnd}
+              />
+            )}
+            <div>
+              <h1 className="text-4xl font-bold text-white">weGig</h1>
+              {session?.user?.name && (
+                <p className="text-gray-400 text-sm">{session.user.name}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Bands Section - Horizontal */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-white">Bands</h2>
+            <Link
+              href="/bands/new"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-3 rounded transition text-sm"
+            >
+              Add Band
+            </Link>
+          </div>
+          {bands.length === 0 ? (
+            <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700 text-center">
+              <p className="text-gray-400 mb-4">No bands yet.</p>
+              <Link
+                href="/bands/new"
+                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition"
+              >
+                Add Your First Band
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setSelectedBand('')}
+                className={`px-4 py-2 rounded-lg border transition ${
+                  selectedBand === ''
+                    ? 'bg-blue-600 border-blue-500 text-white'
+                    : 'bg-gray-800 border-gray-700 text-white hover:border-gray-600'
+                }`}
+              >
+                All Bands
+              </button>
+              {bands.map(band => (
+                <button
+                  key={band.id}
+                  onClick={() => setSelectedBand(band.id)}
+                  className={`px-4 py-2 rounded-lg border transition ${
+                    selectedBand === band.id
+                      ? 'bg-purple-600 border-purple-500 text-white'
+                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  {band.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Songs Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-white">Songs</h2>
+              <Link
+                href="/songs/new"
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded transition text-sm"
+              >
+                Add Song
+              </Link>
+            </div>
+            {songs.length === 0 ? (
+              <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700 text-center">
+                <p className="text-gray-400 mb-4">No songs yet.</p>
+                <Link
+                  href="/songs/new"
+                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition"
+                >
+                  Add Your First Song
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {filteredSongs.map(song => (
+                  <Link
+                    key={song.id}
+                    href={`/songs/${song.id}`}
+                    className="block bg-gray-800 rounded-lg shadow-lg p-4 border border-gray-700 hover:border-blue-500 transition"
+                  >
+                    <h3 className="text-xl font-bold text-white mb-1">{song.title}</h3>
+                    {song.artist && <p className="text-gray-300">{song.artist}</p>}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Setlists Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-white">Setlists</h2>
+              <Link
+                href="/setlists/new"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded transition text-sm"
+              >
+                Create Setlist
+              </Link>
+            </div>
+            {setlists.length === 0 ? (
+              <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700 text-center">
+                <p className="text-gray-400 mb-4">No setlists yet.</p>
+                <Link
+                  href="/setlists/new"
+                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition"
+                >
+                  Create Your First Setlist
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {filteredSetlists.map(setlist => (
+                  <Link
+                    key={setlist.id}
+                    href={`/setlists/${setlist.id}`}
+                    className="block bg-gray-800 rounded-lg shadow-lg p-4 border border-gray-700 hover:border-blue-500 transition"
+                  >
+                    <h3 className="text-xl font-bold text-white mb-2">{setlist.name}</h3>
+                    <div className="flex flex-wrap items-center text-sm text-gray-400 gap-x-2">
+                      <span>{setlist.songs?.length || 0} songs</span>
+                      {setlist.band && (
+                        <>
+                          <span>•</span>
+                          <span>{setlist.band.name}</span>
+                        </>
+                      )}
+                      {setlist.venue && (
+                        <>
+                          <span>•</span>
+                          <span>{setlist.venue}</span>
+                        </>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
